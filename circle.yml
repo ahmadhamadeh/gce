@@ -1,0 +1,26 @@
+machine:
+  services:
+    - docker
+    - couchdb
+
+dependencies:
+  override:
+  pre:
+  - mvn clean install
+  post:
+  - docker build -t ahmadhamadeh/adriano .
+
+
+deployment:
+  production:
+    branch: master
+    commands:
+
+      - docker login -e $ahmad.hamadeh@accenture.com -u ahmadhamadeh -p $DOCKER_PASS
+      - docker push ahmadhamadeh/adriano
+      - ssh hamadeh1985@104.155.55.135 'sudo docker pull ahmadhamadeh/adriano:latest'
+      - ssh hamadeh1985@104.155.55.135 'sudo docker pull adrianojs/couch:latest'
+      - ssh hamadeh1985@104.155.55.135 'sudo docker rm -f web'
+      - ssh hamadeh1985@104.155.55.135 'sudo docker rm -f db'
+      - ssh hamadeh1985@104.155.55.135 'sudo docker run -itd -p 80:8080 -p 5984:5984 --name web ahmadhamadeh/adriano'
+      - ssh hamadeh1985@104.155.55.135 'sudo docker run -itd -p 5984:5984 --name db --net="container:web" adrianojs/couch'
